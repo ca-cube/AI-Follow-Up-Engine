@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-    title: "AI Follow-Up Engine | Negotiation Intelligence",
-    description: "Verticalized, Compliance-Aware AI Follow-Up & Negotiation Intelligence Engine for B2B SaaS.",
+    title: "FollowUp AI | Strategic Negotiation Intelligence",
+    description: "Verticalized, compliance-aware negotiation intelligence for B2B SaaS, Healthcare, and Finance.",
 };
 
 export default function RootLayout({
@@ -18,8 +18,10 @@ export default function RootLayout({
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
                 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
             </head>
-            <body>
-                <main>{children}</main>
+            <body className="font-sans antialiased">
+                <div className="bg-orb orb-1"></div>
+                <div className="bg-orb orb-2"></div>
+                {children}
             </body>
         </html>
     );

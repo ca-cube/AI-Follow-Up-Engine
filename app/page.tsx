@@ -18,60 +18,80 @@ import {
     Cpu,
     RefreshCw,
     Shield,
-    Play
+    Play,
+    Activity,
+    Lock
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SimulationDashboard } from "@/components/SimulationDashboard";
 import { ComplianceEngine } from "@/components/ComplianceEngine";
-import { Industry } from "@/lib/compliance";
 
 const MetricCard = ({ title, value, change, icon: Icon, color }: any) => (
     <motion.div
-        whileHover={{ y: -5 }}
-        className="card group cursor-pointer"
+        whileHover={{ y: -8, scale: 1.02 }}
+        className="glass-card p-6 group cursor-pointer relative overflow-hidden"
     >
-        <div className="flex justify-between items-start mb-4">
-            <div className={`p-2 rounded-lg bg-${color}-500/10 text-${color}-500 group-hover:bg-${color}-500 group-hover:text-white transition-all duration-300`}>
-                <Icon size={24} />
+        <div className={`absolute top-0 right-0 w-24 h-24 bg-${color}-500/5 blur-3xl -mr-12 -mt-12 group-hover:bg-${color}-500/10 transition-all duration-500`}></div>
+        
+        <div className="flex justify-between items-start mb-6">
+            <div className={`p-3 rounded-xl bg-${color}-500/10 text-${color}-400 group-hover:bg-${color}-500 group-hover:text-white transition-all duration-300 shadow-lg`}>
+                <Icon size={22} />
             </div>
-            <span className={`text-sm font-medium ${change.startsWith('+') ? 'text-green-400' : 'text-red-400'}`}>
+            <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold ${change.startsWith('+') ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
+                {change.startsWith('+') ? <TrendingUp size={10} /> : <TrendingUp size={10} className="rotate-180" />}
                 {change}
-            </span>
+            </div>
         </div>
-        <h3 className="text-gray-400 text-sm font-medium uppercase tracking-wider">{title}</h3>
-        <p className="text-3xl font-bold mt-1">{value}</p>
+        
+        <h3 className="text-gray-500 text-xs font-bold uppercase tracking-[0.15em] mb-1">{title}</h3>
+        <p className="text-3xl font-black tracking-tight text-white group-hover:text-blue-400 transition-colors">{value}</p>
+        
+        <div className="mt-4 h-1 w-full bg-white/5 rounded-full overflow-hidden">
+            <motion.div 
+                initial={{ width: 0 }}
+                animate={{ width: "70%" }}
+                className={`h-full bg-${color}-500/50`}
+            />
+        </div>
     </motion.div>
 );
 
 const DealHighlight = ({ deal }: any) => (
-    <div className="flex items-center justify-between p-4 border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors cursor-pointer group">
-        <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-xs font-bold">
-                {deal.company.substring(0, 2).toUpperCase()}
+    <motion.div 
+        whileHover={{ x: 4 }}
+        className="flex items-center justify-between p-5 border-b border-white/[0.03] last:border-0 hover:bg-white/[0.02] transition-all cursor-pointer group"
+    >
+        <div className="flex items-center gap-5">
+            <div className="relative">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600/20 to-purple-600/20 flex items-center justify-center text-sm font-black border border-white/10 group-hover:border-blue-500/50 transition-all">
+                    {deal.company.substring(0, 2).toUpperCase()}
+                </div>
+                <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-[#020203] ${deal.sentiment === 'positive' ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
             </div>
             <div>
-                <h4 className="font-semibold text-gray-200">{deal.company}</h4>
-                <p className="text-xs text-gray-500">{deal.stage} • {deal.lastActivity}</p>
+                <h4 className="font-bold text-gray-100 group-hover:text-blue-400 transition-colors">{deal.company}</h4>
+                <div className="flex items-center gap-2 mt-1">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-white/5 text-gray-500 uppercase tracking-tighter">{deal.stage}</span>
+                    <span className="text-[10px] text-gray-600 font-medium">• {deal.lastActivity}</span>
+                </div>
             </div>
         </div>
         <div className="text-right">
-            <p className="font-bold text-white">${deal.value.toLocaleString()}</p>
-            <div className="flex items-center gap-1 mt-1 justify-end">
-                <div className={`w-2 h-2 rounded-full ${deal.sentiment === 'positive' ? 'bg-green-500' : deal.sentiment === 'neutral' ? 'bg-yellow-500' : 'bg-red-500'}`}></div>
-                <p className="text-[10px] text-gray-400 uppercase font-bold tracking-tight">
-                    Win Prob: {(deal.probability * 100).toFixed(0)}%
+            <p className="font-black text-lg text-white">${deal.value.toLocaleString()}</p>
+            <div className="flex items-center gap-2 mt-1 justify-end">
+                <div className="w-24 h-1 bg-white/5 rounded-full overflow-hidden">
+                    <div className="h-full bg-blue-500/40" style={{ width: `${deal.probability * 100}%` }}></div>
+                </div>
+                <p className="text-[10px] text-blue-400 font-black tracking-widest leading-none">
+                    {(deal.probability * 100).toFixed(0)}%
                 </p>
             </div>
         </div>
-    </div>
+    </motion.div>
 );
 
 export default function Dashboard() {
-    const [isLoaded, setIsLoaded] = useState(false);
-
-    useEffect(() => {
-        setIsLoaded(true);
-    }, []);
+    const [activeTab, setActiveTab] = useState("dashboard");
 
     const deals = [
         { id: 1, company: "Vertex Data", value: 45000, stage: "Negotiation", probability: 0.82, lastActivity: "2h ago", sentiment: "positive" },
@@ -81,214 +101,244 @@ export default function Dashboard() {
         { id: 5, company: "Global Logistics", value: 55000, stage: "Discovery", probability: 0.25, lastActivity: "4d ago", sentiment: "negative" },
     ];
 
-    if (!isLoaded) return null;
+    const menuItems = [
+        { id: "dashboard", icon: LayoutDashboard, label: "Overview" },
+        { id: "deals", icon: Briefcase, label: "Deal Pipeline" },
+        { id: "followups", icon: MessageSquare, label: "Draft Engine" },
+        { id: "simulation", icon: Target, label: "Monte Carlo" },
+        { id: "compliance", icon: ShieldCheck, label: "Guardrails" },
+    ];
 
     return (
-        <div className="min-h-screen flex bg-[#050505] text-white overflow-hidden">
+        <div className="min-h-screen flex bg-[#020203] text-white font-sans overflow-hidden selec">
             {/* Sidebar */}
-            <aside className="w-64 border-r border-white/10 glass hidden lg:flex flex-col p-6 z-10">
-                <div className="flex items-center gap-3 mb-10 px-2">
-                    <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                        <Zap size={18} fill="white" />
+            <aside className="w-72 border-r border-white/5 glass hidden lg:flex flex-col p-8 z-30">
+                <div className="flex items-center gap-4 mb-12 px-2">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center shadow-[0_0_20px_rgba(37,99,235,0.4)] overflow-hidden">
+                        <img src="/logo.png" alt="Logo" className="w-full h-full object-cover scale-150" />
                     </div>
-                    <h1 className="text-xl font-bold tracking-tight">FollowUp<span className="text-blue-500">AI</span></h1>
+                    <div>
+                        <h1 className="text-xl font-black tracking-tighter leading-none">FOLLOWUP<span className="text-blue-500">.AI</span></h1>
+                        <p className="text-[9px] font-bold text-gray-500 uppercase tracking-[0.2em] mt-1">Strategic Engine</p>
+                    </div>
                 </div>
 
                 <nav className="flex-1 space-y-2">
-                    <div className="py-2 px-3 rounded-lg bg-blue-600/10 text-blue-500 flex items-center gap-3 cursor-pointer">
-                        <LayoutDashboard size={20} />
-                        <span className="font-semibold">Dashboard</span>
-                    </div>
-                    <div className="py-2 px-3 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white flex items-center gap-3 cursor-pointer transition-all">
-                        <Briefcase size={20} />
-                        <span className="font-medium">Deals</span>
-                    </div>
-                    <div className="py-2 px-3 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white flex items-center gap-3 cursor-pointer transition-all">
-                        <MessageSquare size={20} />
-                        <span className="font-medium">Follow-ups</span>
-                    </div>
-                    <div className="py-2 px-3 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white flex items-center gap-3 cursor-pointer transition-all">
-                        <Target size={20} />
-                        <span className="font-medium">Simulation</span>
-                    </div>
-                    <div className="py-2 px-3 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white flex items-center gap-3 cursor-pointer transition-all">
-                        <ShieldCheck size={20} />
-                        <span className="font-medium">Compliance</span>
-                    </div>
+                    {menuItems.map((item) => (
+                        <div 
+                            key={item.id}
+                            onClick={() => setActiveTab(item.id)}
+                            className={`group py-3 px-4 rounded-xl flex items-center gap-4 cursor-pointer transition-all duration-300 ${activeTab === item.id ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20' : 'text-gray-500 hover:text-gray-200 hover:bg-white/5 border border-transparent'}`}
+                        >
+                            <item.icon size={20} />
+                            <span className="font-bold text-sm tracking-tight">{item.label}</span>
+                            {activeTab === item.id && (
+                                <motion.div layoutId="activeDot" className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_#3b82f6]"></motion.div>
+                            )}
+                        </div>
+                    ))}
                 </nav>
 
-                <div className="mt-auto pt-6 border-t border-white/5 space-y-2">
-                    <div className="py-2 px-3 rounded-lg hover:bg-white/5 text-gray-400 flex items-center gap-3 cursor-pointer">
-                        <Users size={20} />
-                        <span className="font-medium">Team</span>
+                <div className="mt-auto p-6 bg-white/[0.02] border border-white/5 rounded-2xl">
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="w-8 h-8 rounded-full bg-yellow-500/10 flex items-center justify-center text-yellow-500">
+                            <Lock size={14} />
+                        </div>
+                        <p className="text-xs font-black uppercase tracking-widest text-gray-400">Security</p>
                     </div>
-                    <div className="py-2 px-3 rounded-lg hover:bg-white/5 text-gray-400 flex items-center gap-3 cursor-pointer">
-                        <Settings size={20} />
-                        <span className="font-medium">Settings</span>
-                    </div>
+                    <p className="text-[11px] text-gray-500 leading-relaxed font-medium">Compliance-aware processing is active for <span className="text-blue-400">Healthcare</span> & <span className="text-purple-400">Finance</span> verticals.</p>
                 </div>
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 h-screen overflow-y-auto relative custom-scrollbar">
+            <main className="flex-1 h-screen overflow-y-auto relative custom-scrollbar z-10 font-outfit">
+                {/* Decorative Header Gradient */}
+                <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-blue-600/5 to-transparent pointer-events-none"></div>
+
                 {/* Top Header */}
-                <header className="sticky top-0 z-20 glass border-b border-white/5 px-8 py-4 flex items-center justify-between">
-                    <div className="flex items-center gap-4 bg-white/5 border border-white/10 px-4 py-2 rounded-full w-96">
+                <header className="sticky top-0 z-40 glass border-b border-white/5 px-10 py-5 flex items-center justify-between backdrop-blur-2xl">
+                    <div className="flex items-center gap-4 bg-white/[0.03] border border-white/10 px-5 py-2.5 rounded-2xl w-[450px] focus-within:border-blue-500/50 transition-all">
                         <Search size={18} className="text-gray-500" />
                         <input
                             type="text"
-                            placeholder="Search deals, follow-ups, or clients..."
-                            className="bg-transparent border-none outline-none text-sm w-full"
+                            placeholder="Command center: Search deals, behavior or logs..."
+                            className="bg-transparent border-none outline-none text-sm w-full font-medium placeholder:text-gray-600"
                         />
                     </div>
 
-                    <div className="flex items-center gap-6">
-                        <div className="relative cursor-pointer text-gray-400 hover:text-white transition-colors">
-                            <Bell size={20} />
-                            <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-[#050505]"></span>
-                        </div>
-                        <div className="flex items-center gap-3 cursor-pointer pl-6 border-l border-white/10">
-                            <div className="text-right">
-                                <p className="text-sm font-bold">Alex Founder</p>
-                                <p className="text-[10px] text-blue-500 font-bold uppercase tracking-widest">Enterprise Plan</p>
+                    <div className="flex items-center gap-8">
+                        <div className="relative group cursor-pointer">
+                            <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/10 group-hover:bg-white/5 transition-all">
+                                <Bell size={20} className="text-gray-400 group-hover:text-white" />
                             </div>
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 border border-white/20"></div>
+                            <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-blue-500 rounded-full border-2 border-[#020203] shadow-[0_0_10px_rgba(59,130,246,0.6)]"></span>
+                        </div>
+                        
+                        <div className="flex items-center gap-4 pl-8 border-l border-white/10">
+                            <div className="text-right">
+                                <p className="text-xs font-black uppercase tracking-tighter text-blue-400">Strategist Account</p>
+                                <p className="text-sm font-black text-white">Alex Sterling</p>
+                            </div>
+                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 border border-white/20 p-0.5 hover:rotate-3 transition-transform cursor-pointer">
+                                <div className="w-full h-full rounded-[14px] bg-[#020203] flex items-center justify-center overflow-hidden">
+                                     <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Alex" alt="Avatar" className="w-full h-full object-cover" />
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </header>
 
-                <div className="p-8 max-w-7xl mx-auto space-y-8 animate-fade-in">
-                    {/* Hero Section / Welcome */}
-                    <section className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                        <div>
-                            <h2 className="text-3xl font-extrabold tracking-tight mb-2">
-                                Good morning, <span className="gradient-text">Strategist.</span>
+                <div className="p-10 max-w-[1400px] mx-auto space-y-12">
+                    {/* Welcome Section */}
+                    <section className="flex flex-col md:flex-row md:items-end justify-between gap-8 pt-4">
+                        <div className="space-y-2">
+                            <motion.div 
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                className="flex items-center gap-2 text-blue-500 font-black text-[10px] uppercase tracking-[0.3em]"
+                            >
+                                <div className="w-8 h-[2px] bg-blue-500"></div> System Status: Online
+                            </motion.div>
+                            <h2 className="text-5xl font-black tracking-tighter">
+                                Welcome back, <span className="gradient-text">Alex Sterling.</span>
                             </h2>
-                            <p className="text-gray-400 flex items-center gap-2">
-                                <Cpu size={16} className="text-blue-500" />
-                                AI is currently simulating <span className="text-white font-semibold">1,240</span> deal outcomes across your pipeline.
+                            <p className="text-gray-500 flex items-center gap-2 font-medium text-lg">
+                                <Cpu size={20} className="text-blue-500 animate-pulse" />
+                                Behavioral engines are simulating <span className="text-white font-black underline decoration-blue-500/50 underline-offset-4">1,240</span> outcomes.
                             </p>
                         </div>
-                        <div className="flex gap-3">
-                            <button className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 font-bold text-sm hover:bg-white/10 transition-all flex items-center gap-2">
-                                <RefreshCw size={16} /> Sync CRM
+                        <div className="flex gap-4">
+                            <button className="px-6 py-3.5 rounded-2xl bg-white/[0.03] border border-white/10 font-bold text-sm hover:bg-white/[0.06] transition-all flex items-center gap-2 group">
+                                <RefreshCw size={18} className="group-hover:rotate-180 transition-transform duration-500" /> 
+                                <span className="tracking-tight">Sync Ecosystem</span>
                             </button>
-                            <button className="btn-primary flex items-center gap-2">
-                                <Zap size={16} fill="white" /> New Campaign
+                            <button className="btn-premium flex items-center gap-2">
+                                <Zap size={18} fill="white" className="animate-bounce" /> 
+                                <span className="tracking-tight">New Strategy</span>
                             </button>
                         </div>
                     </section>
 
                     {/* Metrics Grid */}
-                    <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                         <MetricCard title="Win Probability" value="68.4%" change="+4.2%" icon={TrendingUp} color="blue" />
-                        <MetricCard title="Sales Velocity" value="24 Days" change="-2 Days" icon={Zap} color="yellow" />
-                        <MetricCard title="Drafts Pending" value="12" change="+3 new" icon={MessageSquare} color="green" />
-                        <MetricCard title="Risk Exposure" value="$145k" change="-12%" icon={ShieldCheck} color="red" />
+                        <MetricCard title="Sales Velocity" value="24 Days" change="-2 Days" icon={Zap} color="indigo" />
+                        <MetricCard title="Compliance Health" value="99.2%" change="+0.5%" icon={ShieldCheck} color="purple" />
+                        <MetricCard title="Revenue At Risk" value="$145k" change="-12%" icon={Target} color="red" />
                     </section>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        {/* Left Column: Simulation & Compliance */}
-                        <div className="lg:col-span-2 space-y-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+                        {/* Simulation & Compliance Column */}
+                        <div className="lg:col-span-8 space-y-10">
                             <SimulationDashboard />
 
                             <ComplianceEngine />
 
-                            <section className="card p-0 overflow-hidden">
-                                <div className="p-6 border-b border-white/10 flex items-center justify-between">
-                                    <h3 className="font-bold flex items-center gap-2 text-lg">
-                                        <BarChart3 size={20} className="text-blue-500" /> Pipeline Intensity
+                            <section className="glass overflow-hidden border-white/[0.03]">
+                                <div className="p-8 border-b border-white/[0.05] flex items-center justify-between bg-white/[0.01]">
+                                    <h3 className="font-black text-xl tracking-tighter flex items-center gap-3">
+                                        <BarChart3 size={24} className="text-blue-500" /> Live Pipeline Intensity
                                     </h3>
-                                    <button className="text-sm text-blue-500 font-bold hover:underline flex items-center gap-1">
-                                        View Pipeline <ChevronRight size={14} />
+                                    <button className="group text-xs text-blue-400 font-extrabold tracking-widest uppercase flex items-center gap-2 hover:text-white transition-colors">
+                                        Explorer <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
                                     </button>
                                 </div>
-                                <div>
+                                <div className="p-2">
                                     {deals.map(deal => <DealHighlight key={deal.id} deal={deal} />)}
                                 </div>
                             </section>
                         </div>
 
-                        {/* Right Column: Mini Simulation Engine UI */}
-                        <aside className="space-y-6">
-                            <div className="card glass border-blue-500/30">
-                                <h3 className="font-bold mb-4 flex items-center gap-2">
-                                    <Cpu size={18} className="text-blue-500" /> Deal Simulator
+                        {/* Right Sidebar Widgets */}
+                        <aside className="lg:col-span-4 space-y-8">
+                            <div className="glass-card p-8 border-blue-500/20 relative">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 blur-[80px] rounded-full"></div>
+                                <h3 className="font-black text-lg mb-6 flex items-center gap-3 tracking-tighter">
+                                    <Cpu size={22} className="text-blue-500" /> Scenario Sandbox
                                 </h3>
-                                <div className="space-y-4">
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">Select Deal</label>
-                                        <select className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-sm outline-none focus:border-blue-500 transition-colors">
-                                            <option>Vertex Data ($45k)</option>
-                                            <option>Nexus Health ($85k)</option>
-                                        </select>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">Scenario Variable</label>
-                                        <select className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-sm outline-none focus:border-blue-500 transition-colors">
-                                            <option>10% Discount Offer</option>
-                                            <option>Extend Pilot Phase</option>
-                                            <option>Price Increase Announcement</option>
-                                        </select>
-                                    </div>
-
-                                    <div className="pt-4 pb-2">
-                                        <div className="flex justify-between text-xs mb-1">
-                                            <span className="text-gray-400">Simulation Progress</span>
-                                            <span className="text-blue-500 font-bold">100%</span>
+                                <div className="space-y-6">
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] uppercase font-black text-gray-500 tracking-[0.2em] ml-1">Target Account</label>
+                                        <div className="relative group">
+                                            <select className="w-full bg-white/[0.03] border border-white/10 rounded-2xl p-4 text-sm font-bold outline-none focus:border-blue-500/50 appearance-none cursor-pointer transition-all">
+                                                <option>Vertex Data ($45k)</option>
+                                                <option>Nexus Health ($85k)</option>
+                                            </select>
+                                            <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 rotate-90 text-gray-500" size={16} />
                                         </div>
-                                        <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] uppercase font-black text-gray-500 tracking-[0.2em] ml-1">Strategy Variable</label>
+                                        <div className="relative group">
+                                            <select className="w-full bg-white/[0.03] border border-white/10 rounded-2xl p-4 text-sm font-bold outline-none focus:border-blue-500/50 appearance-none cursor-pointer transition-all">
+                                                <option>Incentive Structural Offer</option>
+                                                <option>Pilot Duration Extension</option>
+                                                <option>Executive Access Bundle</option>
+                                            </select>
+                                            <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 rotate-90 text-gray-500" size={16} />
+                                        </div>
+                                    </div>
+
+                                    <div className="pt-4">
+                                        <div className="flex justify-between text-[11px] mb-2 font-black tracking-widest text-gray-500 uppercase">
+                                            <span>Engine Resonance</span>
+                                            <span className="text-blue-500">92%</span>
+                                        </div>
+                                        <div className="w-full bg-white/[0.03] h-2 rounded-full overflow-hidden p-0.5 border border-white/5">
                                             <motion.div
                                                 initial={{ width: 0 }}
-                                                animate={{ width: "100%" }}
-                                                transition={{ duration: 1.5 }}
-                                                className="bg-blue-500 h-full"
+                                                animate={{ width: "92%" }}
+                                                transition={{ duration: 1.5, ease: "easeOut" }}
+                                                className="bg-gradient-to-r from-blue-600 to-indigo-500 h-full rounded-full shadow-[0_0_10px_#2563eb]"
                                             />
                                         </div>
                                     </div>
 
-                                    <div className="p-4 bg-black/40 rounded-lg border border-white/5 space-y-3">
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-xs text-gray-400">Win Prob. Delta</span>
-                                            <span className="text-xs text-green-400 font-bold">+12.4%</span>
+                                    <div className="p-6 bg-white/[0.02] rounded-2xl border border-white/[0.05] space-y-4">
+                                        <div className="flex justify-between items-center pb-3 border-b border-white/[0.03]">
+                                            <span className="text-xs text-gray-500 font-bold">Win Prob. Δ</span>
+                                            <span className="text-sm text-green-400 font-black">+14.2%</span>
+                                        </div>
+                                        <div className="flex justify-between items-center pb-3 border-b border-white/[0.03]">
+                                            <span className="text-xs text-gray-500 font-bold">Velocity Δ</span>
+                                            <span className="text-sm text-red-400 font-black">-8 Days</span>
                                         </div>
                                         <div className="flex justify-between items-center">
-                                            <span className="text-xs text-gray-400">Time-to-Close Delta</span>
-                                            <span className="text-xs text-red-400 font-bold">-6 Days</span>
-                                        </div>
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-xs text-gray-400">E(R) Impact</span>
-                                            <span className="text-xs text-white font-bold">+$4,200</span>
+                                            <span className="text-xs text-gray-500 font-bold">E(R) Impact</span>
+                                            <span className="text-sm text-white font-black">+$5,800</span>
                                         </div>
                                     </div>
 
-                                    <button className="w-full btn-primary py-3 rounded-xl text-sm font-bold shadow-blue-500/20 mt-2">
-                                        Run Monte Carlo Analysis
+                                    <button className="w-full btn-premium py-4 rounded-2xl text-sm font-black shadow-blue-600/20 group uppercase tracking-widest">
+                                        Initiate Simulation
                                     </button>
                                 </div>
                             </div>
 
-                            {/* Engagement Timeline */}
-                            <div className="card">
-                                <h3 className="font-bold mb-4 text-sm flex items-center gap-2">
-                                    <TrendingUp size={16} className="text-gray-400" /> Global Pipeline State
+                            {/* Global Sentiment Chart */}
+                            <div className="glass-card p-8 border-white/[0.03]">
+                                <h3 className="font-black text-sm mb-8 flex items-center gap-3 tracking-widest uppercase text-gray-400">
+                                    <Activity size={18} className="text-indigo-400" /> Pipeline Drift
                                 </h3>
-                                <div className="h-40 flex items-end gap-1 px-2">
-                                    {[40, 60, 45, 90, 65, 80, 50, 70, 85, 95, 60, 75, 55, 80, 90].map((h, i) => (
+                                <div className="h-44 flex items-end gap-1.5 px-1">
+                                    {[45, 65, 40, 85, 70, 95, 55, 75, 90, 80, 65, 85, 60, 95, 88].map((h, i) => (
                                         <motion.div
                                             key={i}
-                                            initial={{ height: 0 }}
-                                            animate={{ height: `${h}%` }}
-                                            transition={{ delay: i * 0.05, duration: 0.5 }}
-                                            className="flex-1 bg-gradient-to-t from-blue-600/20 to-blue-500/60 rounded-t-sm hover:from-blue-500 hover:to-blue-400 transition-all cursor-pointer"
-                                        />
+                                            initial={{ height: 0, opacity: 0 }}
+                                            animate={{ height: `${h}%`, opacity: 1 }}
+                                            transition={{ delay: i * 0.05, duration: 0.8, ease: "circOut" }}
+                                            className="flex-1 rounded-t-lg bg-gradient-to-t from-blue-600/10 via-blue-500/40 to-blue-400/80 hover:scale-x-125 transition-all cursor-pointer relative group"
+                                        >
+                                            <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-blue-500 text-[8px] font-bold px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                                {h}%
+                                            </div>
+                                        </motion.div>
                                     ))}
                                 </div>
-                                <div className="flex justify-between mt-2 px-1">
-                                    <span className="text-[10px] text-gray-500 font-bold">JAN</span>
-                                    <span className="text-[10px] text-gray-500 font-bold">FEB</span>
-                                    <span className="text-[10px] text-gray-500 font-bold">MAR</span>
+                                <div className="flex justify-between mt-5 px-1 font-black text-[9px] text-gray-600 tracking-[0.2em]">
+                                    <span>Q1 BASELINE</span>
+                                    <span>REALTIME ADAPT</span>
                                 </div>
                             </div>
                         </aside>
@@ -297,20 +347,26 @@ export default function Dashboard() {
             </main>
 
             <style jsx global>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(255, 255, 255, 0.2);
-        }
-      `}</style>
+                .custom-scrollbar::-webkit-scrollbar {
+                  width: 5px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-track {
+                  background: transparent;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                  background: rgba(255, 255, 255, 0.05);
+                  border-radius: 10px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                  background: rgba(59, 130, 246, 0.3);
+                }
+                
+                @media (min-width: 1024px) {
+                  .custom-scrollbar {
+                    scrollbar-gutter: stable;
+                  }
+                }
+            `}</style>
         </div>
     );
 }

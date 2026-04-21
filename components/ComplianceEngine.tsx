@@ -113,13 +113,19 @@ export const ComplianceEngine = () => {
                                     Proposed Safe Version
                                 </div>
                                 <div className="p-8 bg-purple-500/[0.03] rounded-3xl border border-purple-500/20 backdrop-blur-md">
-                                    <p className="text-lg italic text-white/90 leading-relaxed font-outfit">
-                                        "{analysis.processedText}"
-                                    </p>
-                                    <div className="mt-6 flex items-center gap-4">
-                                        <button className="px-6 py-2.5 rounded-xl bg-purple-500 text-white font-black text-xs uppercase tracking-widest hover:bg-purple-400 transition-colors">
-                                            Apply Changes
-                                        </button>
+                                     <p className="text-lg italic text-white/90 leading-relaxed font-outfit">
+                                         "{analysis.processedText}"
+                                     </p>
+                                     <div className="mt-6 flex items-center gap-4">
+                                         <button 
+                                             onClick={() => {
+                                                 navigator.clipboard.writeText(analysis.processedText);
+                                                 alert("Safe version copied to clipboard!");
+                                             }}
+                                             className="px-6 py-2.5 rounded-xl bg-purple-500 text-white font-black text-xs uppercase tracking-widest hover:bg-purple-400 transition-colors"
+                                         >
+                                             Apply Changes
+                                         </button>
                                         <button className="px-6 py-2.5 rounded-xl bg-white/5 border border-white/10 text-gray-400 font-black text-xs uppercase tracking-widest hover:text-white transition-colors">
                                             Ignore Risk
                                         </button>

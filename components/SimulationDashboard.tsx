@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { simulateDealOutcome, SalesState, BuyerBehavior } from '@/lib/simulation';
 import { Play, TrendingUp, Clock, DollarSign, AlertCircle, Cpu, Zap, Activity } from 'lucide-react';
 
-export const SimulationDashboard = () => {
+export const SimulationDashboard = ({ selectedDeal, autoRun }: { selectedDeal?: any, autoRun?: number }) => {
     const [isRunning, setIsRunning] = useState(false);
     const [result, setResult] = useState<any>(null);
 
@@ -16,8 +16,8 @@ export const SimulationDashboard = () => {
         // Simulate some latency for 'PhD' processing
         setTimeout(() => {
             const state: SalesState = {
-                dealValue: 50000,
-                currentStage: 'Negotiation',
+                dealValue: selectedDeal?.value || 50000,
+                currentStage: selectedDeal?.stage || 'Negotiation',
                 daysInPipeline: 34,
                 interactionCount: 8
             };
@@ -33,6 +33,12 @@ export const SimulationDashboard = () => {
             setIsRunning(false);
         }, 2000);
     };
+
+    React.useEffect(() => {
+        if (autoRun) {
+            runSimulation();
+        }
+    }, [autoRun, selectedDeal]);
 
     return (
         <div className="glass-card bg-[#020203]/40 border-white/5 p-8 space-y-8 relative overflow-hidden group">
